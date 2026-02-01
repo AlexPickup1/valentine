@@ -11,7 +11,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #ff6ec4, #7873f5); /* vibrant bg */
+    background: linear-gradient(135deg, #ff6ec4, #7873f5);
     font-family: 'Arial', sans-serif;
     overflow: hidden;
   }
@@ -24,13 +24,13 @@
 </head>
 <body>
 
-<canvas id="canvas" width="400" height="700"></canvas> <!-- taller, better phone ratio -->
+<canvas id="canvas" width="400" height="700"></canvas>
 
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-// Draw the hidden message directly on main canvas
+// Draw hidden message first
 ctx.fillStyle = '#fff';
 ctx.fillRect(0,0,canvas.width,canvas.height);
 ctx.fillStyle = '#ff1493';
@@ -45,27 +45,26 @@ overlay.width = canvas.width;
 overlay.height = canvas.height;
 const oCtx = overlay.getContext('2d');
 
-// Vibrant overlay gradient
+// Overlay gradient
 const gradient = oCtx.createLinearGradient(0,0,overlay.width,overlay.height);
 gradient.addColorStop(0,'#ff69b4');
 gradient.addColorStop(1,'#ffb347');
 oCtx.fillStyle = gradient;
 oCtx.fillRect(0,0,overlay.width,overlay.height);
 
-// Add "Scratch to reveal!" text on overlay
+// Overlay text
 oCtx.fillStyle = '#fff';
 oCtx.font = "26px Arial";
 oCtx.textAlign = "center";
 oCtx.textBaseline = "middle";
 oCtx.fillText("Scratch to reveal!", overlay.width/2, overlay.height/2);
 
+// Draw overlay onto main canvas once
+ctx.drawImage(overlay,0,0);
+
 let isDrawing = false;
 let lastPos = {x:0, y:0};
 
-// Draw overlay initially
-ctx.drawImage(overlay,0,0);
-
-// Functions for touch/mouse positions
 function getPos(e){
     const rect = canvas.getBoundingClientRect();
     return {
@@ -74,15 +73,23 @@ function getPos(e){
     };
 }
 
-function startDraw(e){ isDrawing = true; lastPos = getPos(e); draw(e); }
-function endDraw(){ isDrawing = false; }
+function startDraw(e){ 
+    e.preventDefault();
+    isDrawing=true; 
+    lastPos = getPos(e); 
+}
+
+function endDraw(){ 
+    isDrawing=false; 
+}
 
 function draw(e){
     if(!isDrawing) return;
     const pos = getPos(e);
-    // Scratch away overlay only
+
+    // Scratch overlay
     oCtx.globalCompositeOperation = 'destination-out';
-    oCtx.lineWidth = 20; // smaller scratch brush
+    oCtx.lineWidth = 20;
     oCtx.lineCap = 'round';
     oCtx.beginPath();
     oCtx.moveTo(lastPos.x, lastPos.y);
@@ -90,29 +97,18 @@ function draw(e){
     oCtx.stroke();
     lastPos = pos;
 
-    // Draw overlay onto main canvas **without touching the message**
-    ctx.clearRect(0,0,canvas.width,canvas.height); // clear main canvas
-    // redraw background behind message (white for visibility)
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    // redraw message
-    ctx.fillStyle = '#ff1493';
-    ctx.font = "30px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("💖 Will you be my Valentine? 💖", canvas.width/2, canvas.height/2);
-    // draw overlay on top
+    // Redraw overlay onto main canvas
     ctx.drawImage(overlay,0,0);
 }
 
-// Events
+// Mouse and touch events
 canvas.addEventListener('mousedown', startDraw);
 canvas.addEventListener('mouseup', endDraw);
 canvas.addEventListener('mousemove', draw);
 canvas.addEventListener('touchstart', startDraw);
 canvas.addEventListener('touchend', endDraw);
 canvas.addEventListener('touchmove', draw);
-</script>
 
+</script>
 </body>
 </html>
