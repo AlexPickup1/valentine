@@ -13,101 +13,103 @@
     align-items: center;
     background: linear-gradient(135deg, #ff6ec4, #7873f5);
     font-family: 'Arial', sans-serif;
-    overflow: hidden;
   }
-  #canvas {
+  #container {
+    position: relative;
+    width: 400px;
+    height: 700px;
     border-radius: 20px;
+    overflow: hidden;
     box-shadow: 0 0 30px rgba(0,0,0,0.4);
-    touch-action: none;
+  }
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
   }
 </style>
 </head>
 <body>
 
-<canvas id="canvas" width="400" height="700"></canvas>
+<div id="container">
+  <canvas id="messageCanvas" width="400" height="700"></canvas>
+  <canvas id="overlayCanvas" width="400" height="700"></canvas>
+</div>
 
 <script>
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const messageCanvas = document.getElementById('messageCanvas');
+const mCtx = messageCanvas.getContext('2d');
 
-// Draw hidden message first
-ctx.fillStyle = '#fff';
-ctx.fillRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle = '#ff1493';
-ctx.font = "30px Arial";
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
-ctx.fillText("💖 Will you be my Valentine? 💖", canvas.width/2, canvas.height/2);
+const overlayCanvas = document.getElementById('overlayCanvas');
+const oCtx = overlayCanvas.getContext('2d');
 
-// Create overlay canvas
-const overlay = document.createElement('canvas');
-overlay.width = canvas.width;
-overlay.height = canvas.height;
-const oCtx = overlay.getContext('2d');
+// Draw message
+mCtx.fillStyle = '#fff';
+mCtx.fillRect(0,0,messageCanvas.width,messageCanvas.height);
+mCtx.fillStyle = '#ff1493';
+mCtx.font = "30px Arial";
+mCtx.textAlign = "center";
+mCtx.textBaseline = "middle";
+mCtx.fillText("💖 Will you be my Valentine? 💖", messageCanvas.width/2, messageCanvas.height/2);
 
-// Overlay gradient
-const gradient = oCtx.createLinearGradient(0,0,overlay.width,overlay.height);
+// Draw overlay
+const gradient = oCtx.createLinearGradient(0,0,overlayCanvas.width,overlayCanvas.height);
 gradient.addColorStop(0,'#ff69b4');
 gradient.addColorStop(1,'#ffb347');
 oCtx.fillStyle = gradient;
-oCtx.fillRect(0,0,overlay.width,overlay.height);
+oCtx.fillRect(0,0,overlayCanvas.width,overlayCanvas.height);
 
 // Overlay text
 oCtx.fillStyle = '#fff';
 oCtx.font = "26px Arial";
 oCtx.textAlign = "center";
 oCtx.textBaseline = "middle";
-oCtx.fillText("Scratch to reveal!", overlay.width/2, overlay.height/2);
-
-// Draw overlay onto main canvas once
-ctx.drawImage(overlay,0,0);
+oCtx.fillText("Scratch to reveal!", overlayCanvas.width/2, overlayCanvas.height/2);
 
 let isDrawing = false;
-let lastPos = {x:0, y:0};
+let lastPos = {x:0,y:0};
 
 function getPos(e){
-    const rect = canvas.getBoundingClientRect();
+    const rect = overlayCanvas.getBoundingClientRect();
     return {
         x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
         y: (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
     };
 }
 
-function startDraw(e){ 
+function startDraw(e){
     e.preventDefault();
-    isDrawing=true; 
-    lastPos = getPos(e); 
+    isDrawing = true;
+    lastPos = getPos(e);
 }
 
-function endDraw(){ 
-    isDrawing=false; 
+function endDraw(e){
+    e.preventDefault();
+    isDrawing = false;
 }
 
 function draw(e){
     if(!isDrawing) return;
     const pos = getPos(e);
-
-    // Scratch overlay
     oCtx.globalCompositeOperation = 'destination-out';
-    oCtx.lineWidth = 20;
+    oCtx.lineWidth = 25; 
     oCtx.lineCap = 'round';
     oCtx.beginPath();
-    oCtx.moveTo(lastPos.x, lastPos.y);
-    oCtx.lineTo(pos.x, pos.y);
+    oCtx.moveTo(lastPos.x,lastPos.y);
+    oCtx.lineTo(pos.x,pos.y);
     oCtx.stroke();
     lastPos = pos;
-
-    // Redraw overlay onto main canvas
-    ctx.drawImage(overlay,0,0);
 }
 
-// Mouse and touch events
-canvas.addEventListener('mousedown', startDraw);
-canvas.addEventListener('mouseup', endDraw);
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('touchstart', startDraw);
-canvas.addEventListener('touchend', endDraw);
-canvas.addEventListener('touchmove', draw);
+// Events
+overlayCanvas.addEventListener('mousedown', startDraw);
+overlayCanvas.addEventListener('mousemove', draw);
+overlayCanvas.addEventListener('mouseup', endDraw);
+overlayCanvas.addEventListener('mouseleave', endDraw);
+overlayCanvas.addEventListener('touchstart', startDraw);
+overlayCanvas.addEventListener('touchmove', draw);
+overlayCanvas.addEventListener('touchend', endDraw);
+overlayCanvas.addEventListener('touchcancel', endDraw);
 
 </script>
 </body>
