@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scratch Valentine</title>
+<style>
+  body { 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    background: #ffe6f0; 
+    font-family: Arial, sans-serif;
+    margin: 0;
+  }
+  #canvas {
+    touch-action: none; /* enables smooth touch on mobile */
+    border-radius: 20px;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas" width="300" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let isDrawing = false;
+
+// Covering the message
+ctx.fillStyle = '#ff69b4';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// The hidden message
+const message = "💖 Will you be my Valentine? 💖";
+ctx.font = "24px Arial";
+ctx.fillStyle = "#fff";
+ctx.textAlign = "center";
+ctx.fillText(message, canvas.width/2, canvas.height/2);
+
+// Scratch effect
+function startDraw(e) { isDrawing = true; draw(e); }
+function endDraw() { isDrawing = false; ctx.beginPath(); }
+function draw(e) {
+  if (!isDrawing) return;
+  let rect = canvas.getBoundingClientRect();
+  let x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  let y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.lineWidth = 30;
+  ctx.lineCap = 'round';
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+}
+
+// Events
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mouseup', endDraw);
+canvas.addEventListener('mousemove', draw);
+
+canvas.addEventListener('touchstart', startDraw);
+canvas.addEventListener('touchend', endDraw);
+canvas.addEventListener('touchmove', draw);
+</script>
+
+</body>
+</html>
